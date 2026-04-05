@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Antigravity Enterprise | Dashboard</title>
+    <!-- Fonts & Icons -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&family=Outfit:wght@500;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <!-- UI Core -->
+    <link rel="stylesheet" href="style.css">
+    <!-- Chart Engine (MANDATORY BEFORE APP.JS) -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+    <div class="glass-bg"></div>
+    
+    <nav class="sidebar">
+        <div class="logo">
+            <span class="icon">⚡</span>
+            <span class="text">ANTIGRAVITY</span>
+        </div>
+        <ul>
+            <li class="active" id="nav-dashboard" onclick="showSection('dashboard')"><i class="fas fa-chart-line"></i> Dashboard</li>
+            <li id="nav-customers" onclick="showSection('customers')"><i class="fas fa-users-viewfinder"></i> Clientes</li>
+            <li id="nav-invoices" onclick="showSection('invoices')"><i class="fas fa-receipt"></i> Faturas</li>
+        </ul>
+        <div style="margin-top:auto; padding: 20px; border-top: 1px solid var(--border)">
+            <li onclick="window.open('http://127.0.0.1:8000/docs', '_blank')" style="background: rgba(99, 102, 241, 0.1); border-radius:10px; color: #818cf8">
+                <i class="fas fa-code"></i> API Docs (Swagger)
+            </li>
+        </div>
+    </nav>
+
+    <main class="content">
+        <header>
+            <div class="header-left">
+                <h1 id="main-title">Painel de Controle</h1>
+                <p>Plataforma Core v2 (Fintech Engine)</p>
+            </div>
+            <div class="header-right actions-group">
+                <button id="btnNewCustomer" class="btn-subtle"><i class="fas fa-plus"></i> Cliente</button>
+                <button id="btnNewContract" class="btn-subtle"><i class="fas fa-file-contract"></i> Contrato</button>
+                <button id="btnRunBilling" class="btn-primary"><i class="fas fa-rocket"></i> Rodar Faturamento</button>
+            </div>
+        </header>
+
+        <!-- DASHBOARD PAGE -->
+        <div id="section-dashboard" class="page-section">
+            <section class="stats-row">
+                <div class="stat-card">
+                    <h3>Revenue (MRR)</h3>
+                    <p class="value" id="totalMRR">R$ 0,00</p>
+                    <span class="trend">+ 100%</span>
+                </div>
+                <div class="stat-card">
+                    <h3>Assinaturas</h3>
+                    <p class="value" id="countContracts">0</p>
+                    <span class="info">Total no banco</span>
+                </div>
+                <div class="stat-card">
+                    <h3>Pendente</h3>
+                    <p class="value" id="countPending">0</p>
+                    <span class="warning">Risco de Churn</span>
+                </div>
+            </section>
+
+            <!-- BI GRAPHS SECTION -->
+            <section class="bi-row">
+                <div class="card-table chart-container">
+                    <h2 class="chart-label">Crescimento de Receita (Real vs Projeção)</h2>
+                    <canvas id="revenueChart"></canvas>
+                </div>
+                <div class="card-table chart-container">
+                    <h2 class="chart-label">Distribuição de Status</h2>
+                    <canvas id="statusChart"></canvas>
+                </div>
+            </section>
+
+            <!-- ALERTAS DE RISCO -->
+            <section class="main-sections" style="margin-bottom: 40px;">
+                <div class="card-table">
+                    <div class="table-header">
+                        <h2 style="color: var(--error)"><i class="fas fa-exclamation-triangle"></i> Alertas de Cobrança (Dunning)</h2>
+                        <button id="btnRunDunning" class="btn-subtle" style="font-size: 0.8rem">Rodar Analisador de Atrasos</button>
+                    </div>
+                    <div class="table-container">
+                        <table id="alertsTable">
+                            <thead><tr><th>Fatura</th><th>Evento</th><th>Mensagem</th></tr></thead>
+                            <tbody id="alertsTableBody"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </section>
+                <div class="card-table">
+                    <div class="table-header">
+                        <h2>Faturas Recentes</h2>
+                        <button id="refreshDataDashboard" class="btn-icon"><i class="fas fa-redo-alt"></i></button>
+                    </div>
+                    <div class="table-container">
+                        <table>
+                            <thead><tr><th>ID</th><th>Valor</th><th>Status</th><th>Vencimento</th><th>Ações</th></tr></thead>
+                            <tbody id="invoiceTableBody"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </section>
+        </div>
+
+        <!-- CUSTOMERS PAGE -->
+        <div id="section-customers" class="page-section" style="display:none">
+            <div class="card-table">
+                <div class="table-header"><h2>Base de Clientes</h2></div>
+                <div class="table-container">
+                    <table>
+                        <thead><tr><th>ID</th><th>Nome</th><th>WhatsApp</th><th>Status do Serviço</th><th>Ação</th></tr></thead>
+                        <tbody id="customersTableBody"></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- INVOICES PAGE -->
+        <div id="section-invoices" class="page-section" style="display:none">
+            <div class="card-table">
+                <div class="table-header"><h2>Fluxo Global de Faturamento</h2></div>
+                <div class="table-container">
+                    <table>
+                        <thead><tr><th>ID</th><th>CTR</th><th>Valor</th><th>Status</th><th>Token</th></tr></thead>
+                        <tbody id="fullInvoiceTableBody"></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Modals -->
+    <div id="customerModal" class="modal">
+        <div class="modal-content glass">
+            <span class="close" onclick="closeModal('customerModal')">&times;</span>
+            <h2>Cadastrar Cliente</h2>
+            <form id="customerForm" class="fin-form">
+                <label><i class="fas fa-user"></i> Nome:</label>
+                <input type="text" id="custName" required placeholder="Ex: Samuel">
+                <label><i class="fas fa-envelope"></i> E-mail:</label>
+                <input type="email" id="custEmail" required placeholder="muel.h.o33@gmail.com">
+                <label><i class="fab fa-whatsapp"></i> WhatsApp:</label>
+                <input type="text" id="custPhone" placeholder="Ex: (11) 98888-7777">
+                <button type="submit" class="btn-primary">Registrar</button>
+            </form>
+        </div>
+    </div>
+
+    <div id="contractModal" class="modal">
+        <div class="modal-content glass">
+            <span class="close" onclick="closeModal('contractModal')">&times;</span>
+            <h2>Nova Assinatura</h2>
+            <form id="contractForm" class="fin-form">
+                <select id="selectCustomer" required><option value="">Selecione o Cliente...</option></select>
+                <input type="number" id="contValue" placeholder="Valor Mensal (R$)" step="0.01" required>
+                <div class="input-group">
+                    <label style="font-size:0.8rem; color:var(--text-muted)">Data de Início do Contrato:</label>
+                    <input type="date" id="contStartDate" required>
+                </div>
+                <select id="contRecurrence">
+                    <option value="MONTHLY">MENSAL</option>
+                    <option value="YEARLY">ANUAL</option>
+                </select>
+                <button type="submit" class="btn-primary">Ativar Contrato Retroativo</button>
+            </form>
+        </div>
+    </div>
+
+    <div id="pixModal" class="modal">
+        <div class="modal-content glass">
+            <span class="close" onclick="closeModal('pixModal')">&times;</span>
+            <h2>Pix de Pagamento</h2>
+            <div class="pix-area"><textarea id="pixCodeArea" readonly></textarea></div>
+            <button id="confirmMockPayment" class="btn-pay">Simular Pagamento</button>
+        </div>
+    </div>
+
+    <!-- LIVE AUDIT TERMINAL -->
+    <div id="liveTerminal" class="floating-terminal">
+        <div class="terminal-header" onclick="toggleTerminal()">
+            <span><i class="fas fa-terminal"></i> Terminal de Auditoria (Live)</span>
+            <span id="termToggleIcon"><i class="fas fa-chevron-down"></i></span>
+        </div>
+        <div id="terminalBody" class="terminal-body">
+            <div class="log-line">>> Sistema Antigravity v2.0 Online...</div>
+            <div class="log-line">>> Aguardando eventos do núcleo...</div>
+        </div>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+</html>

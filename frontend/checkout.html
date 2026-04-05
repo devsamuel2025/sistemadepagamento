@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Checkout Seguro | Antigravity Payments</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&family=Outfit:wght@700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        :root { --bg: #0f172a; --card: rgba(30, 41, 59, 0.7); --primary: #10b981; --text: #f8fafc; --text-muted: #94a3b8; }
+        body { margin: 0; padding: 0; font-family: 'Inter', sans-serif; background: var(--bg); color: var(--text); display: flex; align-items: center; justify-content: center; min-height: 100vh; overflow-x: hidden; }
+        .glass-bg { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: radial-gradient(circle at 20% 20%, rgba(16, 185, 129, 0.15) 0%, transparent 40%), radial-gradient(circle at 80% 80%, rgba(99, 102, 241, 0.1) 0%, transparent 40%); z-index: -1; }
+        .checkout-card { background: var(--card); backdrop-filter: blur(20px); border: 1px solid rgba(255,255,255,0.1); border-radius: 24px; padding: 40px; width: 90%; max-width: 450px; text-align: center; box-shadow: 0 25px 50px -12px rgba(0,0,0,0.5); }
+        .logo { font-family: 'Outfit', sans-serif; font-size: 1.5rem; color: var(--primary); margin-bottom: 30px; letter-spacing: -1px; }
+        .logo i { margin-right: 8px; }
+        .invoice-info h1 { font-size: 2rem; margin: 10px 0; font-family: 'Outfit', sans-serif; }
+        .invoice-info p { color: var(--text-muted); margin-bottom: 30px; }
+        .pix-area { background: rgba(0,0,0,0.3); border-radius: 16px; padding: 20px; margin-bottom: 25px; border: 1px dashed var(--primary); }
+        .pix-code-box { background: rgba(255,255,255,0.05); padding: 15px; border-radius: 10px; font-family: monospace; font-size: 0.8rem; word-break: break-all; margin-bottom: 15px; color: var(--primary); }
+        .btn-pay { background: var(--primary); color: #000; border: none; padding: 12px 24px; border-radius: 12px; font-weight: 700; cursor: pointer; width: 100%; transition: all 0.2s; margin-bottom: 10px; }
+        .btn-confirm { background: transparent; color: var(--primary); border: 1px solid var(--primary); padding: 12px 24px; border-radius: 12px; font-weight: 700; cursor: pointer; width: 100%; }
+        .btn-pay:hover { transform: scale(1.02); filter: brightness(1.1); }
+        .footer { font-size: 0.8rem; color: var(--text-muted); margin-top: 30px; }
+        .badge { background: rgba(245, 158, 11, 0.2); color: #f59e0b; padding: 4px 12px; border-radius: 20px; font-size: 0.7rem; font-weight: bold; }
+    </style>
+</head>
+<body>
+    <div class="glass-bg"></div>
+    <div class="checkout-card">
+        <div class="logo"><i class="fas fa-bolt"></i> ANTIGRAVITY</div>
+        <div id="loader">Carregando detalhes...</div>
+        <div id="checkout-content" style="display:none">
+            <div class="invoice-info">
+                <span class="badge" id="payStatus">AGUARDANDO PAGAMENTO</span>
+                <p id="billTo" style="margin-top:20px; font-size:0.9rem"></p>
+                <h1>R$ <span id="payAmount">0,00</span></h1>
+            </div>
+            <div class="pix-area" id="pixArea">
+                <div class="pix-code-box" id="pixCode">...</div>
+                <button class="btn-pay" onclick="copyPix()"><i class="fas fa-copy"></i> Copiar Pix</button>
+                <button class="btn-confirm" onclick="confirmPayment()"><i class="fas fa-check-circle"></i> Já fiz o pagamento</button>
+            </div>
+            <div class="footer"><i class="fas fa-shield-alt"></i> Pagamento Seguro</div>
+        </div>
+    </div>
+    <script>
+        const API_URL = "http://127.0.0.1:8000";
+        const urlParams = new URLSearchParams(window.location.search);
+        const token = urlParams.get('token');
+
+        async function loadCheckout() {
+            if (!token) { document.getElementById("loader").innerText = "Token inválido."; return; }
+            try {
+                const response = await fetch(`${API_URL}/checkout/${token}`);
+                const data = await response.json();
+                document.getElementById("billTo").innerHTML = `Olá, <strong>${data.customer}</strong>`;
+                document.getElementById("payAmount").innerText = data.amount.toFixed(2);
+                document.getElementById("pixCode").innerText = data.pix_code;
+                if (data.status === "paid") {
+                    document.getElementById("payStatus").innerText = "PAGO ✅";
+                    document.getElementById("payStatus").style.background = "#10b981";
+                    document.getElementById("pixArea").style.display = "none";
+                }
+                document.getElementById("loader").style.display = "none";
+                document.getElementById("checkout-content").style.display = "block";
+            } catch (e) { document.getElementById("loader").innerText = "Fatura não encontrada."; }
+        }
+
+        async function confirmPayment() {
+            try {
+                const response = await fetch(`${API_URL}/checkout/confirm/${token}`, { method: 'POST' });
+                if (!response.ok) throw new Error("Não conseguimos confirmar ainda.");
+                alert("🚀 Sucesso! Pagamento confirmado. Seu serviço já está ativo.");
+                location.reload();
+            } catch (e) { alert(e.message); }
+        }
+
+        function copyPix() {
+            navigator.clipboard.writeText(document.getElementById("pixCode").innerText);
+            alert("Código Pix copiado!");
+        }
+        loadCheckout();
+    </script>
+</body>
+</html>
